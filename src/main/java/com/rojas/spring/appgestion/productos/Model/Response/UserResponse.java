@@ -1,0 +1,12 @@
+package com.rojas.spring.appgestion.productos.Model.Response;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record UserResponse(
+        Long id,
+        String username,
+        String email,
+        String role,
+        Boolean isActive
+) {}
