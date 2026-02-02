@@ -1,0 +1,19 @@
+services:
+  backend:
+    build: .
+    container_name: spring_backend
+    ports:
+      - "8081:8081"
+    environment:
+      # Conexión a Railway
+      SPRING_DATASOURCE_URL: jdbc:mysql://shinkansen.proxy.rlwy.net:28488/railway?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: yKmRjcwYsvNoXeuusuAVIgFrbeZUYpUK
+
+      # Ruta donde Spring Boot buscará las imágenes dentro del contenedor
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      # Esto vincula una carpeta de tu PC/VPS con la del contenedor
+      # "uploads" es la carpeta en tu servidor, "/app/uploads" en el Docker
+      - ./uploads:/app/uploads
+    restart: on-failure
