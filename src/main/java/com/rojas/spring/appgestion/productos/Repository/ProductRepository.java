@@ -11,5 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Query("UPDATE Product p SET p.stock = p.stock - :quantity WHERE p.id = :id AND p.stock >= :quantity")
-    int decreaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
+    int decreaseStock(@Param("id") Long id, @Param("quantity") Integer quantity); //todo el param no es necesario
+    //todo el metodo de arriba es para que se reste el stock de manera sincronizada
+    //todo Este cuenta cuántos productos tienen stock por debajo del límite que le pases
+    long countByStockLessThan(Integer stock);
 }

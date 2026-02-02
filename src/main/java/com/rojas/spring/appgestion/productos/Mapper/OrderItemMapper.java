@@ -15,7 +15,9 @@ public interface OrderItemMapper {
     OrderItem toEntity(OrderItemRequest request);
 
     @Mapping(target = "productName", source = "product.name")
-    @Mapping(target = "subtotal", expression = "java(entity.getQuantity() * entity.getPriceAtPurchase())")
+    // Agregamos esta línea para asegurar que el precio se vea en la respuesta
+    @Mapping(target = "priceAtPurchase", source = "product.price")
+    @Mapping(target = "subtotal", expression = "java(entity.getQuantity() * entity.getProduct().getPrice())")
     OrderItemResponse toResponse(OrderItem entity);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

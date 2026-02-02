@@ -14,4 +14,5 @@ public class OrderRequest {
 
     @NotEmpty(message = "La orden debe tener al menos un producto")
     private List<OrderItemRequest> items;
+
 }

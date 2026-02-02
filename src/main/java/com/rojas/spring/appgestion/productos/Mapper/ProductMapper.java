@@ -9,7 +9,8 @@ import org.mapstruct.*;
 public interface ProductMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "isActive", constant = "true")
+    // Cambiamos constant = "true" por expression para evitar errores de tipo
+    @Mapping(target = "isActive", expression = "java(true)")
     Product toEntity(ProductRequest request);
 
     ProductResponse toResponse(Product entity);

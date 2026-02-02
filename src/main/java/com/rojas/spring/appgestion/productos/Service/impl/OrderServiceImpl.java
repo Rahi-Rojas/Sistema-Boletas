@@ -13,6 +13,8 @@ import com.rojas.spring.appgestion.productos.Service.OrderService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class OrderServiceImpl
         extends BaseGenericServiceImpl<Order, OrderRequest, OrderResponse, Long, OrderRepository>
@@ -21,6 +23,7 @@ public class OrderServiceImpl
     private final OrderMapper orderMapper;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
 
     // El constructor debe tener TODOS estos parámetros para que Spring los inyecte
     public OrderServiceImpl(OrderRepository repository,
@@ -31,6 +34,25 @@ public class OrderServiceImpl
         this.orderMapper = orderMapper;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.orderRepository = repository;
+    }
+
+    @Override
+    public List<OrderResponse> findMyOrders() {
+        // 1. Obtener el username desde el token (SecurityContext)
+        String username = org.springframework.security.core.context.SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+        // 2. Buscar al usuario por su username para obtener su ID
+        // (Asegúrate de tener findByUsername en tu UserRepository)
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        // 3. Retornar solo sus órdenes
+        return orderRepository.findByUserId(user.getId())
+                .stream()
+                .map(orderMapper::toResponse)
+                .toList();
     }
 
     @Override
@@ -84,6 +106,28 @@ public class OrderServiceImpl
         Order savedOrder = repository.save(order);
         return orderMapper.toResponse(savedOrder);
     }
+
+    @Override
+    @Transactional
+    public void cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + orderId));
+
+        if (!order.getIsActive()) {
+            throw new RuntimeException("La orden ya está cancelada.");
+        }
+
+        // Devolver el stock a cada producto
+        for (OrderItem item : order.getItems()) {
+            Product product = item.getProduct();
+            product.setStock(product.getStock() + item.getQuantity());
+            productRepository.save(product);
+        }
+
+        order.setIsActive(false);
+        orderRepository.save(order);
+    }
+
 
     @Override
     @Transactional(readOnly = true)

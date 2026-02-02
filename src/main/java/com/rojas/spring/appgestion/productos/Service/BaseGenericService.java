@@ -1,7 +1,6 @@
 package com.rojas.spring.appgestion.productos.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface BaseGenericService<RQ, RS, ID> {
     List<RS> findAll();

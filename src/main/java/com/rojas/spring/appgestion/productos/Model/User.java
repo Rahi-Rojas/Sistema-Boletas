@@ -3,6 +3,7 @@ package com.rojas.spring.appgestion.productos.Model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Entity
@@ -25,7 +26,7 @@ public class User {
     private String password;
 
     @Email(message = "Formato de email inválido")
-    @NotBlank
+    @NotBlank(message = "El email no puede estar vacio")
     private String email;
 
     @NotBlank

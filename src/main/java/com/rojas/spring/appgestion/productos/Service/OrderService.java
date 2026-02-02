@@ -7,5 +7,7 @@ import java.util.List;
 
 public interface OrderService
         extends BaseGenericService<OrderRequest, OrderResponse, Long>{
-        List<OrderResponse> findAll();
+        List<OrderResponse> findAll(); //clasico listar todos
+        List<OrderResponse> findMyOrders();// ver mis ordenes
+        void cancelOrder(Long orderId); //metodo para cancelar orden y regresa el stock
 }

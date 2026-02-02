@@ -17,7 +17,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-
+    // Obtiene todos los usuarios (Ahora incluye activos e inactivos por el cambio en el Service)
     @GetMapping("/find-all")
     public ResponseEntity<List<UserResponse>> findAll() {
         return ResponseEntity.ok(userService.findAll());
@@ -35,10 +35,19 @@ public class UserController {
         return ResponseEntity.ok(userService.update(id, userRequest));
     }
 
+    // BORRADO LÓGICO: Desactiva al usuario (Protegido contra ADMIN en el Service)
     @DeleteMapping("/delete-soft/{id}")
     public ResponseEntity<Void> deleteSoft(@PathVariable Long id) {
-        // En tu ServiceImpl, el deleteById ya maneja la lógica de borrado
         userService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // NUEVO - BORRADO FÍSICO: Elimina permanentemente de la BD
+    // En una app real, este endpoint debería estar protegido solo para SUPER_ADMIN
+    @DeleteMapping("/delete-hard/{id}")
+    public ResponseEntity<Void> deleteHard(@PathVariable Long id) {
+        // Asegúrate de haber agregado este método en tu Interfaz UserService
+        userService.hardDeleteById(id);
         return ResponseEntity.noContent().build();
     }
 

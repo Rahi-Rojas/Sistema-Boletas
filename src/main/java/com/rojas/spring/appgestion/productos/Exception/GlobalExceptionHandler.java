@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. Atrapa tus errores personalizados (ApiErrorException)
+    //todo Atrapa los errores personalizados osea el ApiErrorexception
     @ExceptionHandler(ApiErrorException.class)
     public ResponseEntity<ErrorMessage> handleApiError(ApiErrorException ex, WebRequest request) {
         ErrorMessage error = ErrorMessage.builder()
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, ex.getStatus());
     }
 
-    // 2. Atrapa errores de lógica/stock (RuntimeException)
+    //todo Atrapa errores de lógica/stock (RuntimeException)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorMessage> handleRuntimeException(RuntimeException ex, WebRequest request) {
         ErrorMessage error = ErrorMessage.builder()
@@ -40,7 +40,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    // 3. Atrapa CUALQUIER otra cosa que falle (El escudo final)
+    //todo Atrapa CUALQUIER otra cosa que falle (El escudo final)
+    //todo: recomendacion de chatsito🤑
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorMessage> handleGlobalException(Exception ex, WebRequest request) {
         ErrorMessage error = ErrorMessage.builder()
@@ -51,7 +52,9 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
+    //todo:Este método específico captura las MethodArgumentNotValidException,
+    // que se disparan cuando los datos enviados desde el Frontend no cumplen con las
+    // reglas que definimos en los DTOs (como un precio negativo o un nombre vacío).
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
