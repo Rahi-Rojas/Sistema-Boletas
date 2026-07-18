@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rojas.spring.appgestion.productos.Model.Request.ProductRequest;
 import com.rojas.spring.appgestion.productos.Model.Response.ProductResponse;
 import com.rojas.spring.appgestion.productos.Service.ProductService;
-import com.rojas.spring.appgestion.productos.Service.UploadFileService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -83,5 +81,12 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.findById(id));
+    }
+
+    @GetMapping("/findByPriceRange")
+    public ResponseEntity<List<ProductResponse>> findByPriceRange(
+            @RequestParam Double minPrice,
+            @RequestParam Double maxPrice) {
+        return ResponseEntity.ok(productService.findByPriceRange(minPrice, maxPrice));
     }
 }

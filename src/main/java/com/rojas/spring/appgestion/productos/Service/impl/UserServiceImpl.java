@@ -81,15 +81,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse login(com.rojas.spring.appgestion.productos.Model.Request.LoginRequest loginRequest) {
-        User user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new ApiErrorException("Usuario no encontrado", HttpStatus.UNAUTHORIZED));
-        // CORRECCIÓN: Validar si el usuario está activo antes de dejarlo loguear
-        if (!user.getIsActive()) {
-            throw new ApiErrorException("La cuenta está desactivada. Contacte al administrador.", HttpStatus.FORBIDDEN);
+        User user = userRepository.findByUsername(loginRequest.getUsername()).orElse(null);
+
+        if (user == null || !user.getIsActive()
+                || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new ApiErrorException("Credenciales inválidas", HttpStatus.UNAUTHORIZED);
         }
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new ApiErrorException("Contraseña incorrecta", HttpStatus.UNAUTHORIZED);
-        }
+
         return userMapper.toResponse(user);
     }
 }

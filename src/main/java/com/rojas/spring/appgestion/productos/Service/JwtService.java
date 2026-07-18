@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,15 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // Usa una clave secreta de al menos 32 caracteres
-    private static final String SECRET_KEY = "tu_clave_secreta_super_segura_que_debe_ser_larga_y_fuerte";
+    private final Key secretKey;
+
+    public JwtService(@Value("${jwt.secret}") String secret) {
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException(
+                    "jwt.secret debe tener al menos 32 caracteres. Configúralo en application.properties o como variable de entorno JWT_SECRET.");
+        }
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
 
     // metodo para extraer el nombre dentro del token
     public String extractUsername(String token) {
@@ -50,9 +58,8 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody();
     }
-    // Transforma la cadena de texto de la SECRET_KEY en una llave criptográfica segura
     private Key getSignInKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        return secretKey;
     }
     // Creamos el token si el user inicio sesión sin fallas
     public String generateToken(String username) {
@@ -61,6 +68,6 @@ public class JwtService {
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 horas
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact(); //todo: aumentar el refreshToken cada 10 minutos
+                .compact();
     }
 }

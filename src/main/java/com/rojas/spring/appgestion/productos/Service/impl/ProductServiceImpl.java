@@ -153,4 +153,13 @@ public class ProductServiceImpl
     protected Product mapToEntity(ProductRequest request) {
         return productMapper.toEntity(request);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponse> findByPriceRange(Double minPrice, Double maxPrice) {
+        return productRepository.findByPriceBetweenAndIsActiveTrue(minPrice, maxPrice)
+                .stream()
+                .map(productMapper::toResponse)
+                .toList();
+    }
 }

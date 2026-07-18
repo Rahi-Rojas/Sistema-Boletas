@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
@@ -15,4 +17,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     //todo el metodo de arriba es para que se reste el stock de manera sincronizada
     //todo Este cuenta cuántos productos tienen stock por debajo del límite que le pases
     long countByStockLessThan(Integer stock);
+
+    List<Product> findByPriceBetweenAndIsActiveTrue(Double minPrice, Double maxPrice);
 }
