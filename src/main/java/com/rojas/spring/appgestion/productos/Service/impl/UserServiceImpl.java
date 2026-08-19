@@ -8,6 +8,8 @@ import com.rojas.spring.appgestion.productos.Model.User;
 import com.rojas.spring.appgestion.productos.Repository.UserRepository;
 import com.rojas.spring.appgestion.productos.Service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -85,9 +89,11 @@ public class UserServiceImpl implements UserService {
 
         if (user == null || !user.getIsActive()
                 || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            log.warn("Intento de login fallido para el usuario '{}'", loginRequest.getUsername());
             throw new ApiErrorException("Credenciales inválidas", HttpStatus.UNAUTHORIZED);
         }
 
+        log.info("Login exitoso para el usuario '{}'", user.getUsername());
         return userMapper.toResponse(user);
     }
 }

@@ -1,15 +1,20 @@
 package com.rojas.spring.appgestion.productos.Service.impl;
 
+import com.rojas.spring.appgestion.productos.Exception.ApiErrorException;
 import com.rojas.spring.appgestion.productos.Mapper.OrderMapper;
 import com.rojas.spring.appgestion.productos.Model.Order;
 import com.rojas.spring.appgestion.productos.Model.OrderItem;
 import com.rojas.spring.appgestion.productos.Model.Product;
 import com.rojas.spring.appgestion.productos.Model.Request.OrderRequest;
 import com.rojas.spring.appgestion.productos.Model.Response.OrderResponse;
+import com.rojas.spring.appgestion.productos.Model.User;
 import com.rojas.spring.appgestion.productos.Repository.OrderRepository;
 import com.rojas.spring.appgestion.productos.Repository.UserRepository;
 import com.rojas.spring.appgestion.productos.Repository.ProductRepository;
 import com.rojas.spring.appgestion.productos.Service.OrderService;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,15 +45,8 @@ public class OrderServiceImpl
     @Override
     public List<OrderResponse> findMyOrders() {
         // 1. Obtener el username desde el token (SecurityContext)
-        String username = org.springframework.security.core.context.SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-        // 2. Buscar al usuario por su username para obtener su ID
-        // (Asegúrate de tener findByUsername en tu UserRepository)
-        var user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        // 3. Retornar solo sus órdenes
+        User user = currentUser();
+        // 2. Retornar solo sus órdenes
         return orderRepository.findByUserId(user.getId())
                 .stream()
                 .map(orderMapper::toResponse)
@@ -58,6 +56,14 @@ public class OrderServiceImpl
     @Override
     @Transactional
     public OrderResponse create(OrderRequest request) {
+        User currentUser = currentUser();
+
+        // Un usuario normal solo puede crear órdenes a su propio nombre.
+        // Un ADMIN sí puede crear órdenes para cualquier usuario.
+        if (!isAdmin()) {
+            request.setUserId(currentUser.getId());
+        }
+
         // 1. Mapeo inicial
         Order order = orderMapper.toEntity(request);
 
@@ -111,10 +117,14 @@ public class OrderServiceImpl
     @Transactional
     public void cancelOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + orderId));
+                .orElseThrow(() -> new ApiErrorException("Orden no encontrada con ID: " + orderId, HttpStatus.NOT_FOUND));
+
+        if (!isAdmin() && !order.getUser().getId().equals(currentUser().getId())) {
+            throw new ApiErrorException("No puedes cancelar una orden que no te pertenece", HttpStatus.FORBIDDEN);
+        }
 
         if (!order.getIsActive()) {
-            throw new RuntimeException("La orden ya está cancelada.");
+            throw new ApiErrorException("La orden ya está cancelada.", HttpStatus.BAD_REQUEST);
         }
 
         // Devolver el stock a cada producto
@@ -126,6 +136,34 @@ public class OrderServiceImpl
 
         order.setIsActive(false);
         orderRepository.save(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponse findById(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ApiErrorException("No se encontró la orden con el ID: " + id, HttpStatus.NOT_FOUND));
+
+        if (!isAdmin() && !order.getUser().getId().equals(currentUser().getId())) {
+            throw new ApiErrorException("No puedes ver una orden que no te pertenece", HttpStatus.FORBIDDEN);
+        }
+
+        return orderMapper.toResponse(order);
+    }
+
+    private User currentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            throw new ApiErrorException("Usuario no autenticado", HttpStatus.UNAUTHORIZED);
+        }
+        return userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new ApiErrorException("Usuario no encontrado", HttpStatus.UNAUTHORIZED));
+    }
+
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ADMIN".equals(a.getAuthority()));
     }
 
 

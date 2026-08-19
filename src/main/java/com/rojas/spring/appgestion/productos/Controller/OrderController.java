@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -23,6 +24,7 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final com.rojas.spring.appgestion.productos.Repository.ProductRepository productRepository;
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/find-all")
     public ResponseEntity<List<OrderResponse>> findAll() {
         return ResponseEntity.ok(orderService.findAll());
@@ -35,12 +37,8 @@ public class OrderController {
 
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<?> cancelOrder(@PathVariable Long id) {
-        try {
-            orderService.cancelOrder(id);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Orden cancelada y stock devuelto exitosamente"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
-        } //todo de mi servicio lance la excepcion en el catch y mi global exception handler lo capta y muestra
+        orderService.cancelOrder(id);
+        return ResponseEntity.ok(Collections.singletonMap("message", "Orden cancelada y stock devuelto exitosamente"));
     }
 
     @PostMapping("/create")
@@ -54,6 +52,7 @@ public class OrderController {
     }
 
     // Cambiamos el nombre del endpoint a algo más descriptivo
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/reporte-ventas")
     public ResponseEntity<DashboardResponse> getReporteVentas() {
         Double revenue = orderRepository.getTotalRevenue();

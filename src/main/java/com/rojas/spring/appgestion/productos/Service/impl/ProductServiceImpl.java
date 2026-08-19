@@ -8,6 +8,7 @@ import com.rojas.spring.appgestion.productos.Model.Response.ProductResponse;
 import com.rojas.spring.appgestion.productos.Repository.ProductRepository;
 import com.rojas.spring.appgestion.productos.Service.ProductService;
 import com.rojas.spring.appgestion.productos.Service.UploadFileService; // Nuevo import
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ public class ProductServiceImpl
     private final ProductMapper productMapper;
     private final ProductRepository productRepository;
     private final UploadFileService uploadFileService; // 1. Añadimos el servicio de archivos
+
+    @Value("${app.upload.url-base}")
+    private String uploadUrlBase;
 
     // 2. Actualizamos el constructor para la inyección
     public ProductServiceImpl(ProductRepository repository, ProductMapper productMapper, UploadFileService uploadFileService) {
@@ -53,7 +57,7 @@ public class ProductServiceImpl
         // 2. Si viene un archivo, lo guardamos y seteamos la URL
         if (file != null && !file.isEmpty()) {
             String fileName = uploadFileService.saveFile(file);
-            entity.setImageUrl("http://localhost:8081/uploads/" + fileName);
+            entity.setImageUrl(uploadUrlBase + fileName);
         }
 
         // 3. Guardamos y retornamos
@@ -99,7 +103,7 @@ public class ProductServiceImpl
 
         if (file != null && !file.isEmpty()) {
             Optional.ofNullable(product.getImageUrl()).ifPresent(uploadFileService::deleteFile);
-            product.setImageUrl("http://localhost:8081/uploads/" + uploadFileService.saveFile(file));
+            product.setImageUrl(uploadUrlBase + uploadFileService.saveFile(file));
         }
 
         updateFields(product, request); // Ya no saldrá en rojo
@@ -126,7 +130,7 @@ public class ProductServiceImpl
             // Borramos la imagen anterior del disco si existe
             Optional.ofNullable(product.getImageUrl()).ifPresent(uploadFileService::deleteFile);
             // Guardamos la nueva y actualizamos la URL
-            product.setImageUrl("http://localhost:8081/uploads/" + uploadFileService.saveFile(file));
+            product.setImageUrl(uploadUrlBase + uploadFileService.saveFile(file));
         }
 
         // 2. Lógica para los campos del JSON (solo actualiza si no son nulos)

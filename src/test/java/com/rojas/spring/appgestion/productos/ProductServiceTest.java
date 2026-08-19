@@ -72,7 +72,7 @@ public class ProductServiceTest {
         });
 
         // 3. VERIFY
-        assertEquals("Producto no encontrado con ID: 99", exception.getMessage());
+        assertEquals("Producto no encontrado para desactivar", exception.getMessage());
         // Verificamos que el repositorio NUNCA intentó guardar (borrado lógico) porque falló antes
         verify(productRepository, never()).save(any(Product.class));
     }

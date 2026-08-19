@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,16 +19,19 @@ public class UserController {
 
     private final UserService userService;
     // Obtiene todos los usuarios (Ahora incluye activos e inactivos por el cambio en el Service)
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/find-all")
     public ResponseEntity<List<UserResponse>> findAll() {
         return ResponseEntity.ok(userService.findAll());
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest userRequest) {
         return new ResponseEntity<>(userService.create(userRequest), HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/update/{id}")
     public ResponseEntity<UserResponse> update(
             @PathVariable Long id,
@@ -36,6 +40,7 @@ public class UserController {
     }
 
     // BORRADO LÓGICO: Desactiva al usuario (Protegido contra ADMIN en el Service)
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/delete-soft/{id}")
     public ResponseEntity<Void> deleteSoft(@PathVariable Long id) {
         userService.deleteById(id);
@@ -44,6 +49,7 @@ public class UserController {
 
     // NUEVO - BORRADO FÍSICO: Elimina permanentemente de la BD
     // En una app real, este endpoint debería estar protegido solo para SUPER_ADMIN
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/delete-hard/{id}")
     public ResponseEntity<Void> deleteHard(@PathVariable Long id) {
         // Asegúrate de haber agregado este método en tu Interfaz UserService

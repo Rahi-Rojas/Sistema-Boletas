@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rojas.spring.appgestion.productos.Model.Request.ProductRequest;
 import com.rojas.spring.appgestion.productos.Model.Response.ProductResponse;
 import com.rojas.spring.appgestion.productos.Service.ProductService;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/product")
@@ -20,6 +24,8 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final ObjectMapper objectMapper;
+    private final Validator validator;
 
     @GetMapping("/find-all")
     public ResponseEntity<List<ProductResponse>> findAll() {
@@ -32,8 +38,8 @@ public class ProductController {
             @RequestPart("request") String requestJson,
             @RequestPart("file") MultipartFile file) throws IOException {
 
-        ObjectMapper objectMapper = new ObjectMapper();
         ProductRequest request = objectMapper.readValue(requestJson, ProductRequest.class);
+        validate(request);
 
         return new ResponseEntity<>(productService.create(request, file), HttpStatus.CREATED);
     }
@@ -44,8 +50,8 @@ public class ProductController {
             @RequestPart("request") String requestJson,
             @RequestPart(value = "file", required = false) MultipartFile file) throws IOException {
 
-        ObjectMapper objectMapper = new ObjectMapper();
         ProductRequest request = objectMapper.readValue(requestJson, ProductRequest.class);
+        validate(request);
 
         return ResponseEntity.ok(productService.update(id, request, file));
     }
@@ -72,10 +78,18 @@ public class ProductController {
 
         ProductRequest request = null;
         if (requestJson != null && !requestJson.isBlank() && !requestJson.equalsIgnoreCase("string")) {
-            request = new ObjectMapper().readValue(requestJson, ProductRequest.class);
+            request = objectMapper.readValue(requestJson, ProductRequest.class);
+            validate(request);
         }
 
         return ResponseEntity.ok(productService.patch(id, request, file));
+    }
+
+    private void validate(ProductRequest request) {
+        Set<ConstraintViolation<ProductRequest>> violations = validator.validate(request);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
+        }
     }
 
     @GetMapping("/{id}")
